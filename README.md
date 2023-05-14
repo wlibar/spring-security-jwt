@@ -2,14 +2,15 @@
 
 ## Introducción
 
-Ejemplo para trabajar autenticación y autorización con Spring Security utilizando token con JWT.
+Ejemplo para trabajar autenticación y autorización con Spring Security utilizando token con JSON Web Token (JWT). JWT se usa ampliamente para proteger las API REST, en términos de transmisión segura de tokens junto con solicitudes HTTP, lo que facilita la comunicación segura y sin estado entre los clientes REST y el backend API.
 
->Este tutorial está basado en el [tutorial de bezcoder.com](https://www.bezkoder.com/spring-boot-security-jwt/). Se le hicieron cambios para que el token sea devuelto en el login de usuario y luego enviar dicho token en cada solicitud a las APIs. Además, tiene otras mejoras.
+>Este tutorial está basado en los tutoriales de [bezcoder.com](https://www.bezkoder.com/spring-boot-security-jwt/) y [codejava](https://www.codejava.net/frameworks/spring-boot/spring-security-jwt-authentication-tutorial). Hicimos varios cambios para que el token sea devuelto en el login de usuario y luego enviar dicho token en cada solicitud a las APIs. Además, este tutorial tiene otras mejoras en todo el código.
 
 Este  ejemplo muestra una aplicación REST con Spring Boot que maneja la autenticación y autorización mediante JWT (Json Web Token). La aplicación utiliza una base de datos H2 para almacenar datos de los usuarios, sus roles y artículos. La interacción principal de la aplicación se muestra en la siguiente Figura.
 
-![spring-security-jwt-auth-spring-boot-flow](flujo.png)
+![flujo](flujo.png)
 
+Como proveedor de Identidad en el Server, se puede usar un microservicio sencillo o usar algo comercial como (Keycloak) [https://www.keycloak.org/].  La Instalación de Keycloack se puede instalar dentro de un cluster de Kubernetes. En este tutorial la autenticación la hacemos en el mismo backend de la API Rest por efectos de simplicidad. Queda pendiente crear un microservicio que haga la lógica de autenticación para que pueda ser reutilizado por otros microsevicios.
 
 ## Creación del proyecto java con Spring Boot
 
@@ -95,7 +96,7 @@ Este es la estructura de carpetas y archivos para este ejemplo de Spring Boot Se
 
 **auth**: Este paquete contiene la implementación y configuración de Spring Boot Security para hacer auteticación y autorización mediante JWT.
 
-* *ApplicationSecurity*.  Esta clase configura la seguridad global de la aplicación. El método configure() hace varias cosas importantes: le dice a Spring Security cómo configurar el CORS y CSRF; qué rutas necesitarán autenticación y cuáles no; qué filtro (JwtTokenFilter) y cuándo queremos que funcione; cargará los detalles del usuario para realizar la autenticación y autorización; finalmente, el método passwordEncoder() permite cifrar las contraseñas de los usuarios.
+* *ApplicationSecurity*.  Esta clase configura la seguridad global de la aplicación. El método configure() hace varias cosas importantes: le dice a Spring Security cómo configurar el [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) y [CSRF](https://portswigger.net/web-security/csrf); qué rutas necesitarán autenticación y cuáles no; qué filtro (JwtTokenFilter) y cuándo queremos que funcione; cargará los detalles del usuario para realizar la autenticación y autorización; finalmente, el método passwordEncoder() permite cifrar las contraseñas de los usuarios.
 * *JwtTokenFilter*. Esta clase define un filtro que se ejecuta cada vez que se hace una solicitu a las APIs. JwtTokenFilter extiende OncePerRequestFilter y sobreescribe el método doFilterInternal(). Este método doFilternInternal() obtiene el JWT de la cabecera HTTP,
 si la solicitud tiene JWT, lo valida, analizar el usuario y establecer los detalles de usuario actual en SecurityContext utilizando el método setAuthenticationContext().
 * *JwtTokenUtil*. Esta clase genera un nuevo token a partir de un usuario mediante el método generateAccessToken(User). Tambien valida si un token es válido mediante el método validateAccessToken(token).
@@ -119,11 +120,24 @@ si la solicitud tiene JWT, lo valida, analizar el usuario y establecer los detal
     ROLE_MODERATOR y ROLE_ADMIN.
 
 
-**Repository*. Ahora, cada modelo anterior necesita un repositorio para persistir y acceder a los datos. En el paquete del repository, hay 3 repositorios:
+**Repository**. Ahora, cada modelo anterior necesita un repositorio para persistir y acceder a los datos. En el paquete del repository, hay 3 repositorios:
 
 * *ProductRepository*. Repositorio de productos.
 * *RoleRepository*. Repositoro de roles.
 * *UserRepository*. Repositorio de usuarios.
+Cada repositorio implementa la interfaz JpaRepository<[Clase del Modelo], Long> que hace parte de la API de JPA y Spring-Boot. De esta manera con poco código la logica de acceso a la base de datos queda implementada de forma automática. 
+
+Cuando hay que implementar algun metodo especial de busqueda Spring Boot JPA usa la convención findBy[campo], tal como se muestra en el siguiente codigo:
+
+```
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer> {
+    //Spring Boot JAP hace la busqueda por Email siguiendo la convencion findBy[Campo]
+    Optional<User> findByEmail(String email);
+    Boolean existsByEmail(String email);
+}
+```
+Igual logica se aplica con los métodos existsBy**Campo**();
 
 ## Compilar y ejecutar de la aplicación
 
@@ -228,4 +242,11 @@ Como este recurso sólo está permitido para usuarios con rol ROLE_MOD, se obtie
 
 Finalmente, le queda probar los recursos de las APIs con todos los demás usuarios.
 
-Espero que este tutorial haya sido de su agrado!!
+En este video se puede apreciar lo explicado anteriormente sobre como debe funcionar la aplicación:
+
+[![Demo en youtube](demo-image.png)](https://youtu.be/X91fV6XouKw "Demo aplicación")
+
+
+
+Espero que este tutorial haya sido de tu agrado!!
+
