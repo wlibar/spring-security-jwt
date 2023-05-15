@@ -1,8 +1,19 @@
 # Ejemplo de autenticación y autorización con Spring-Boot y JWT
 
-## Introducción
+**Contenido**
 
-Ejemplo para trabajar autenticación y autorización con Spring Security utilizando token con JSON Web Token (JWT). JWT se usa ampliamente para proteger las API REST, en términos de transmisión segura de tokens junto con solicitudes HTTP, lo que facilita la comunicación segura y sin estado entre los clientes REST y el backend API.
+1. [Introducción](#intro)
+2. [Creación del proyecto java con Spring Boot](#creacion)
+3. [Propiedades de la aplicación](#propiedades)
+4. [Estructura del Proyecto](#estructura)
+5. [Compilar y ejecutar la aplicación](#compilar)
+6. [Probando las APIs](#probando")
+
+## Introducción <a name="intro"></a>
+
+Ejemplo para trabajar autenticación y autorización con Spring Security utilizando token con JSON Web Token (JWT) en lugar de sesiones. JWT se usa ampliamente para proteger las API REST, en términos de transmisión segura de tokens junto con solicitudes HTTP, lo que facilita la comunicación segura y sin estado entre los clientes REST y el backend API.
+
+JWT es un estándar abierto basado en JSON propuesto por IETF (RFC 7519) para la creación de tokens de acceso que permiten la propagación de identidad y privilegios o claims.
 
 >Este tutorial está basado en los tutoriales de [bezcoder.com](https://www.bezkoder.com/spring-boot-security-jwt/) y [codejava](https://www.codejava.net/frameworks/spring-boot/spring-security-jwt-authentication-tutorial). Hicimos varios cambios para que el token sea devuelto en el login de usuario y luego enviar dicho token en cada solicitud a las APIs. Además, este tutorial tiene otras mejoras en todo el código.
 
@@ -10,9 +21,13 @@ Este  ejemplo muestra una aplicación REST con Spring Boot que maneja la autenti
 
 ![flujo](flujo.png)
 
+1. Para la autenticación, la aplicación cliente solicita a un servidor de autorización un token. Con ese token solicita a un servidor de recursos el acceso a rutas protegidas.
+2. La autorización se logra cuando el usuario ingresa sus credenciales con éxito, entonces se genera un JSON Web Token que es retornado al cliente, quien tiene que guardarlo localmente, en vez del modelo tradicional de crear una sesión en el servidor y retornar una cookie.
+3. Para la autorización, siempre que el usuario quiere acceder a una ruta protegida o recurso, el cliente tiene que enviar el JWT, generalmente en el encabezado de Authorization utilizando el esquema Bearer (portadora). Este es un mecanismo de autenticación sin estado - stateless- ya que la sesión del usuario nunca se guarda en el proveedor de identidad o en el proveedor del servicio. Los recursos protegidos siempre comprobaran si existe un JWT válido en cada pedido de acceso. Si el token está presente y es válido, el proveedor del servicio otorga accesos a los recursos protegidos. Como los JWTs contienen toda la información necesaria en sí mismos, se reduce la necesidad de consultar la base de datos u otras fuentes de información múltiples veces.
+
 Como proveedor de Identidad en el Server, se puede usar un microservicio sencillo o usar algo comercial como (Keycloak) [https://www.keycloak.org/].  La Instalación de Keycloack se puede instalar dentro de un cluster de Kubernetes. En este tutorial la autenticación la hacemos en el mismo backend de la API Rest por efectos de simplicidad. Queda pendiente crear un microservicio que haga la lógica de autenticación para que pueda ser reutilizado por otros microsevicios.
 
-## Creación del proyecto java con Spring Boot
+## Creación del proyecto java con Spring Boot <a name="creacion"></a>
 
 Para inicializar el proyecto se puede utilizar la herramienta [initializer de Spring Boot](https://start.spring.io/). En esta pagina llenar los campos del inicializador según la siguiente imagen.
 
@@ -60,7 +75,7 @@ La tecnología usada como se aprecia en la Figura anterior es:
 * H2 (Base de datos embebida)
 * jjwt 0.9.1
 
-## Propiedades de la aplicación
+## Propiedades de la aplicación<a name="propiedades"></a>
 
 En la carpeta src/main/resources, está el archivo **application.properties** que tiene las siguientes lineas de configuración para la base de datos h2 y la generación de tokens:
 
@@ -86,7 +101,7 @@ Spring Boot utiliza Hibernate como implementación de JPA. Hemos utiliado la con
 * *spring.h2.console.enabled=true* le dice a Spring que inicie la herramienta de administración de la base de datos H2 y puede acceder a esta herramienta en el navegador: http://localhost:8080/h2-console.
 * *spring.h2.console.path=/h2-ui* es para la URL de la consola H2, por lo que la URL predeterminada es http://localhost:8080/h2-console y la hemos cambiado a http://localhost:8080/h2-ui.
 
-## Estructura del Proyecto
+## Estructura del Proyecto<a name="estructura></a>
 
 Este es la estructura de carpetas y archivos para este ejemplo de Spring Boot Security JWT.
 
@@ -139,7 +154,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 ```
 Igual logica se aplica con los métodos existsBy**Campo**();
 
-## Compilar y ejecutar de la aplicación
+## Compilar y ejecutar la aplicación<a name="compilar"></a>
 
 Para compilar la aplicación por consola: 
 
@@ -208,7 +223,7 @@ INSERT INTO products (id, name, price) VALUES (2,'nevera', 1200);
 
 ```
 
-### Probando las APIs
+## Probando las APIs<a name="probando"></a>
 Primero debe iniciar sesión con el usuario admin@gmail.com y solicitar un token: GET /auth/login
 
 
